@@ -11,7 +11,7 @@ import logging
 
 from qutebrowser.api import cmdutils
 from qutebrowser.commands import runners
-from qutebrowser.utils import message, usertypes
+from qutebrowser.utils import message
 
 from qutebrowser.misc.ai import translator
 

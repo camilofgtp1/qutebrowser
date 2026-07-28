@@ -1,16 +1,16 @@
-# SPDX-FileCopyrightText: Camilo <camilo@example.com>
+# SPDX-FileCopyrightText: Camilo <camilo@example.com>  # noqa: A005
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
+
+"""Shared dataclasses for the AI command translator."""
 
 from __future__ import annotations
 
 import dataclasses
-from typing import Optional
 
 
 @dataclasses.dataclass
 class CandidateCommand:
-
     """A candidate command returned from retrieval."""
 
     name: str
@@ -20,7 +20,6 @@ class CandidateCommand:
 
 @dataclasses.dataclass
 class ResolvedCommand:
-
     """A resolved command from the AI provider."""
 
     command: str

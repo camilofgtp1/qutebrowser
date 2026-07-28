@@ -169,59 +169,73 @@ def _tokenize(text: str) -> list[str]:
     return re.findall(r'\w+', text.lower())
 
 
-def _retrieve_tfidf_stdlib(
-    query: str,
-    corpus: list[CandidateCommand],
-) -> list[float]:
-    """Score corpus entries via a hand-rolled TF-IDF + cosine similarity.
-
-    Zero extra dependencies – uses only ``math``, ``re``, and
-    ``collections.Counter``.
-    """
-    corpus_texts = [_text_for_entry(e) for e in corpus]
-    query_text = query
-
+def _build_vocab(texts: list[str]) -> dict[str, int]:
     vocab: dict[str, int] = {}
-    for text in corpus_texts + [query_text]:
+    for text in texts:
         for token in _tokenize(text):
             if token not in vocab:
                 vocab[token] = len(vocab)
+    return vocab
 
-    n_docs = len(corpus_texts)
-    if n_docs == 0 or not vocab:
-        return [0.0] * n_docs
 
+def _build_doc_freq(
+    texts: list[str], vocab: dict[str, int],
+) -> Counter[str]:
     doc_freq: Counter[str] = Counter()
-    for text in corpus_texts:
+    for text in texts:
         seen = set(_tokenize(text))
         for token in seen:
             if token in vocab:
                 doc_freq[token] += 1
+    return doc_freq
 
-    def _vectorize(text: str) -> list[float]:
-        vec = [0.0] * len(vocab)
-        tokens = _tokenize(text)
-        tf = Counter(tokens)
-        for token, count in tf.items():
-            if token in vocab:
-                idx = vocab[token]
-                tf_val = 1.0 + math.log10(count) if count > 0 else 0.0
-                idf_val = math.log10((n_docs + 1) / (doc_freq[token] + 1)) + 1.0
-                vec[idx] = tf_val * idf_val
-        return vec
 
-    def _sim(a: list[float], b: list[float]) -> float:
-        dot = sum(ai * bi for ai, bi in zip(a, b))
-        na = math.sqrt(sum(x * x for x in a))
-        nb = math.sqrt(sum(x * x for x in b))
-        if na == 0 or nb == 0:
-            return 0.0
-        return dot / (na * nb)
+def _tfidf_vectorize(
+    text: str, vocab: dict[str, int], doc_freq: Counter[str],
+    n_docs: int,
+) -> list[float]:
+    vec = [0.0] * len(vocab)
+    tokens = _tokenize(text)
+    tf = Counter(tokens)
+    for token, count in tf.items():
+        if token in vocab:
+            idx = vocab[token]
+            tf_val = 1.0 + math.log10(count) if count > 0 else 0.0
+            idf_val = math.log10((n_docs + 1) / (doc_freq[token] + 1)) + 1.0
+            vec[idx] = tf_val * idf_val
+    return vec
 
-    query_vec = _vectorize(query_text)
+
+def _cosine_sim_float(a: list[float], b: list[float]) -> float:
+    dot = sum(ai * bi for ai, bi in zip(a, b))
+    na = math.sqrt(sum(x * x for x in a))
+    nb = math.sqrt(sum(x * x for x in b))
+    if na == 0 or nb == 0:
+        return 0.0
+    return dot / (na * nb)
+
+
+def _retrieve_tfidf_stdlib(
+    query: str,
+    corpus: list[CandidateCommand],
+) -> list[float]:
+    corpus_texts = [_text_for_entry(e) for e in corpus]
+    n_docs = len(corpus_texts)
+    if n_docs == 0:
+        return [0.0] * n_docs
+
+    all_texts = corpus_texts + [query]
+    vocab = _build_vocab(all_texts)
+    if not vocab:
+        return [0.0] * n_docs
+
+    doc_freq = _build_doc_freq(corpus_texts, vocab)
+    query_vec = _tfidf_vectorize(query, vocab, doc_freq, n_docs)
     scores = []
     for text in corpus_texts:
-        scores.append(_sim(query_vec, _vectorize(text)))
+        scores.append(
+            _cosine_sim_float(query_vec, _tfidf_vectorize(text, vocab, doc_freq, n_docs))
+        )
     return scores
 
 

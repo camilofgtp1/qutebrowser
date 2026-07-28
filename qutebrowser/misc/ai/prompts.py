@@ -71,7 +71,7 @@ Correct URL opening (multi-word stays as search):
 
 Correct open in new tab:
   Request: "open wikipedia in a new tab"
-  After look-up: open has flags --tab (new foreground tab), --bg (new background tab)
+  After look-up: open --tab (foreground) or --bg (background)
   Response: [{{"command": "open", "args": ["--tab", "wikipedia.org"]}}]
 
 Correct open two URLs in separate tabs:

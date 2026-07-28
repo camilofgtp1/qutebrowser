@@ -160,7 +160,7 @@ def _chat_completion(
         with urllib.request.urlopen(req, timeout=120) as resp:
             data = json.loads(resp.read().decode('utf-8'))
     except (urllib.error.URLError, urllib.error.HTTPError,
-            json.JSONDecodeError, OSError, TimeoutError) as exc:
+            json.JSONDecodeError, OSError) as exc:
         logger.info("[llm] API call failed: %s", exc)
         return None
 
