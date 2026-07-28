@@ -38,6 +38,9 @@ be joined with ";;" automatically).
 looks like a bare domain name (e.g. "wikipedia", "google"), complete it \
 to a valid URL with .com or .org (e.g. "wikipedia" → "wikipedia.org"). \
 Keep multi-word or descriptive text as-is — the browser will search for it.
+- By default **open** loads the URL in the current tab. To open in a new \
+tab, pass **--tab** (foreground) or **--bg** (background). Never use \
+**tab-new** or any other command — **open --tab** is the correct way.
 
 Correct single command:
   Request: "close the current tab"
@@ -66,6 +69,30 @@ Correct URL opening (multi-word stays as search):
   Request: "open python tutorial"
   Response: [{{"command": "open", "args": ["python tutorial"]}}]
 
+Correct open in new tab:
+  Request: "open wikipedia in a new tab"
+  After look-up: open has flags --tab (new foreground tab), --bg (new background tab)
+  Response: [{{"command": "open", "args": ["--tab", "wikipedia.org"]}}]
+
+Correct open two URLs in separate tabs:
+  Request: "open wikipedia and google in separate tabs"
+  After look-up: open has flag --tab
+  Response: [{{"command": "open", "args": ["--tab", "wikipedia.org"]}}, \
+{{"command": "open", "args": ["--tab", "google.com"]}}]
+
+Correct add bookmark:
+  Request: "add google to bookmarks"
+  After look-up: bookmark-add takes <url> and <title> (both positional)
+  Response: [{{"command": "bookmark-add", "args": ["google.com", "Google"]}}]
+
+Correct show bookmarks:
+  Request: "show my bookmarks"
+  Response: [{{"command": "bookmark-list", "args": []}}]
+
+Correct reload:
+  Request: "reload this tab"
+  Response: [{{"command": "reload", "args": []}}]
+
 WRONG - do not nest commands inside args:
   [{{"command": "tab-only", "args": [{{"command": "google", "args": []}}]}}]
 
@@ -73,7 +100,13 @@ WRONG - do not put arguments inside the command string:
   [{{"command": "tab-close --force", "args": []}}]
 
 WRONG - do not use -- prefix for positional arguments:
-  [{{"command": "navigate", "args": ["--where", "prev"]}}]\
+  [{{"command": "navigate", "args": ["--where", "prev"]}}]
+
+WRONG - do not use tab-new or invent commands for opening tabs:
+  [{{"command": "tab-new", "args": ["google.com"]}}]
+
+WRONG - do not omit --tab when the user asks for a new/separate/another tab:
+  [{{"command": "open", "args": ["google.com"]}}] (this opens in the current tab, not a new tab)\
 """
 
 # ---------------------------------------------------------------------------
@@ -103,6 +136,9 @@ be joined with ";;" automatically).
 looks like a bare domain name (e.g. "wikipedia", "google"), complete it \
 to a valid URL with .com or .org (e.g. "wikipedia" → "wikipedia.org"). \
 Keep multi-word or descriptive text as-is — the browser will search for it.
+- By default **open** loads the URL in the current tab. To open in a new \
+tab, pass **--tab** (foreground) or **--bg** (background). Never use \
+**tab-new** or any other command — **open --tab** is the correct way.
 
 Correct single command:
   Request: "close the current tab"
@@ -128,6 +164,26 @@ Correct URL opening (multi-word stays as search):
   Request: "open python tutorial"
   Response: [{"command": "open", "args": ["python tutorial"]}]
 
+Correct open in new tab:
+  Request: "open wikipedia in a new tab"
+  Response: [{"command": "open", "args": ["--tab", "wikipedia.org"]}]
+
+Correct open two URLs in separate tabs:
+  Request: "open wikipedia and google in separate tabs"
+  Response: [{"command": "open", "args": ["--tab", "wikipedia.org"]}, {"command": "open", "args": ["--tab", "google.com"]}]
+
+Correct add bookmark:
+  Request: "add google to bookmarks"
+  Response: [{"command": "bookmark-add", "args": ["google.com", "Google"]}]
+
+Correct show bookmarks:
+  Request: "show my bookmarks"
+  Response: [{"command": "bookmark-list", "args": []}]
+
+Correct reload:
+  Request: "reload this tab"
+  Response: [{"command": "reload", "args": []}]
+
 WRONG - do not nest commands inside args:
   [{"command": "tab-only", "args": [{"command": "google", "args": []}]}]
 
@@ -135,7 +191,13 @@ WRONG - do not put arguments inside the command string:
   [{"command": "tab-close --force", "args": []}]
 
 WRONG - do not use -- prefix for positional arguments:
-  [{"command": "navigate", "args": ["--where", "prev"]}]\
+  [{"command": "navigate", "args": ["--where", "prev"]}]
+
+WRONG - do not use tab-new or invent commands for opening tabs:
+  [{"command": "tab-new", "args": ["google.com"]}]
+
+WRONG - do not omit --tab when the user asks for a new/separate/another tab:
+  [{"command": "open", "args": ["google.com"]}] (this opens in the current tab, not a new tab)\
 """
 
 # ---------------------------------------------------------------------------

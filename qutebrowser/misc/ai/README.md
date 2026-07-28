@@ -6,6 +6,16 @@ qutebrowser is entirely keyboard- and command-driven — every action goes throu
 
 **Trigger:** `:ai-do close all tabs except this one and mute the rest` (bound to a key, e.g. `,a`, for convenience). Note: `maxsplit=0` means quotes around the query are optional.
 
+Examples that work well with the default model:
+- `:ai-do reload this tab`
+- `:ai-do open google`
+- `:ai-do open google in a new tab`
+- `:ai-do open wikipedia and google in separate tabs`
+- `:ai-do show my bookmarks`
+- `:ai-do add google to bookmarks`
+- `:ai-do mute all tabs`
+- `:ai-do close all tabs except this one and mute the rest` (multi-step, chained)
+
 **Flow:**
 1. **Retrieval** — the query is matched against a corpus built from qutebrowser's own command registry. The most relevant candidates (default: top-8) are surfaced.
 2. **Translation** — a language model resolves the query into one or more concrete commands referencing *only those candidate* commands.
@@ -191,8 +201,13 @@ The whole pipeline is reviewable with nothing installed beyond qutebrowser itsel
 2. Run `:ai-do your request in plain English` — for example:
    - `:ai-do close every tab except the current one`
    - `:ai-do mute all tabs`
+   - `:ai-do reload this tab`
+   - `:ai-do show my bookmarks`
+   - `:ai-do open google`
+   - `:ai-do add google to bookmarks`
+   - `:ai-do open google in a new tab`
+   - `:ai-do open wikipedia and google in separate tabs`
    - `:ai-do close all tabs except this one and mute the rest` (multi-step, chained)
-   - `:ai-do open wikipedia` (URL completion, no quotes needed)
 3. Confirm the shown command string when prompted (y/n).
 4. (Optional) bind it to a key for convenience by adding to your `config.py`:
    ```python
