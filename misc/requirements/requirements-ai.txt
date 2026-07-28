@@ -1,7 +1,13 @@
 # Required Python packages for the AI natural-language command translator.
 # Install with: pip install -r misc/requirements/requirements-ai.txt
 #
-# sentence-transformers pulls torch, transformers, tokenizers, and
-# huggingface-hub as transitive dependencies (~4 GB total).
+# Torch is pinned from the CPU-only index to avoid pulling ~3.5 GB of
+# unnecessary CUDA/nvidia libraries.  sentence-transformers runs on CPU for
+# embedding — GPU acceleration is only useful for LLM inference, which runs
+# via Ollama's own stack (ROCm for AMD, CUDA for NVIDIA), not PyTorch.
+
+--index-url https://download.pytorch.org/whl/cpu
+torch>=2.0.0
+--index-url https://pypi.org/simple
 
 sentence-transformers>=3.0,<6.0

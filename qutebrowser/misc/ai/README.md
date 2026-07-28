@@ -263,6 +263,7 @@ See also [`RFC.md`](RFC.md) for the full design history, challenges, and rationa
 - **Structured-output constraint on generation.** LLM must return strict JSON referencing only candidate commands. Anything outside is dropped.
 - **Function-calling for command lookup.** Preferred path lets the LLM fetch exact command specs on demand, reducing hallucinations compared to inline prompt dumps. Falls back gracefully if the backend doesn't support tools.
 - **Config kept to environment variables only.** Not wired into qutebrowser's `configdata.yml` — reduces surface area for an experimental feature.
+- **sentence-transformers for embeddings.** Provides high-quality semantic matching with the `all-MiniLM-L6-v2` model (~500 MB at inference). Tradeoff: it depends on PyTorch, which adds ~500 MB (CPU-only wheel) to the install — or ~3.5 GB if CUDA libraries are pulled in. A lighter embedding backend (e.g. ONNX, pure-numpy) would avoid this but would either sacrifice accuracy or require more complex model conversion/quantization tooling.
 
 ---
 
