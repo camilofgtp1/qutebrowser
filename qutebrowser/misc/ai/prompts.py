@@ -38,9 +38,17 @@ be joined with ";;" automatically).
 looks like a bare domain name (e.g. "wikipedia", "google"), complete it \
 to a valid URL with .com or .org (e.g. "wikipedia" → "wikipedia.org"). \
 Keep multi-word or descriptive text as-is — the browser will search for it.
+- 'navigate to X' where X is a website name (e.g. "wikipedia") means **open** \
+X, NOT the `navigate` command. The **navigate** command only takes \
+directional values (prev|next|up|increment|decrement|strip), not URLs.
 - By default **open** loads the URL in the current tab. To open in a new \
 tab, pass **--tab** (foreground) or **--bg** (background). Never use \
 **tab-new** or any other command — **open --tab** is the correct way.
+- For zoom/scale requests, use **zoom-in** (increase) or **zoom-out** \
+(decrease). These take an optional positional count (number of steps).
+  Never invent flags like --flag or --level for zoom commands.
+- Never invent argument names. Only use the exact flag names returned by \
+get_command_details (e.g. --tab, --bg, --url). Never write --flag.
 
 Correct single command:
   Request: "close the current tab"
@@ -80,6 +88,25 @@ Correct open two URLs in separate tabs:
   Response: [{{"command": "open", "args": ["--tab", "wikipedia.org"]}}, \
 {{"command": "open", "args": ["--tab", "google.com"]}}]
 
+Correct navigate to a website (use open, not navigate):
+  Request: "navigate to wikipedia"
+  Response: [{{"command": "open", "args": ["wikipedia.org"]}}]
+
+Correct go to a website (use open):
+  Request: "go to wikipedia"
+  Response: [{{"command": "open", "args": ["wikipedia.org"]}}]
+
+Correct zoom with count:
+  Request: "zoom in 5 steps"
+  After look-up: zoom-in takes <count> (positional, integer)
+  Response: [{{"command": "zoom-in", "args": ["5"]}}]
+
+Correct open three new tabs:
+  Request: "open 3 new tabs with the homepage"
+  Response: [{{"command": "open", "args": ["--tab", "about:blank"]}}, \
+{{"command": "open", "args": ["--tab", "about:blank"]}}, \
+{{"command": "open", "args": ["--tab", "about:blank"]}}]
+
 Correct add bookmark:
   Request: "add google to bookmarks"
   After look-up: bookmark-add takes <url> and <title> (both positional)
@@ -106,7 +133,13 @@ WRONG - do not use tab-new or invent commands for opening tabs:
   [{{"command": "tab-new", "args": ["google.com"]}}]
 
 WRONG - do not omit --tab when the user asks for a new/separate/another tab:
-  [{{"command": "open", "args": ["google.com"]}}] (this opens in the current tab, not a new tab)\
+  [{{"command": "open", "args": ["google.com"]}}] (this opens in the current tab, not a new tab)
+
+WRONG - do not map "go to X" to non-open commands:
+  [{{"command": "command-history-next", "args": []}}] ("go to wikipedia" should use open, not command-history-next)
+
+WRONG - do not invent flag names for zoom:
+  [{{"command": "zoom-in", "args": ["--flag", "50%"]}}] (zoom-in has no --flag; use plain count value instead)\
 """
 
 # ---------------------------------------------------------------------------
@@ -136,9 +169,17 @@ be joined with ";;" automatically).
 looks like a bare domain name (e.g. "wikipedia", "google"), complete it \
 to a valid URL with .com or .org (e.g. "wikipedia" → "wikipedia.org"). \
 Keep multi-word or descriptive text as-is — the browser will search for it.
+- 'navigate to X' where X is a website name (e.g. "wikipedia") means **open** \
+X, NOT the `navigate` command. The **navigate** command only takes \
+directional values (prev|next|up|increment|decrement|strip), not URLs.
 - By default **open** loads the URL in the current tab. To open in a new \
 tab, pass **--tab** (foreground) or **--bg** (background). Never use \
 **tab-new** or any other command — **open --tab** is the correct way.
+- For zoom/scale requests, use **zoom-in** (increase) or **zoom-out** \
+(decrease). These take an optional positional count (number of steps).
+  Never invent flags like --flag or --level for zoom commands.
+- Never invent argument names. Only use the exact flag names from the \
+candidate list (e.g. --tab, --bg, --url). Never write --flag.
 
 Correct single command:
   Request: "close the current tab"
@@ -172,6 +213,22 @@ Correct open two URLs in separate tabs:
   Request: "open wikipedia and google in separate tabs"
   Response: [{"command": "open", "args": ["--tab", "wikipedia.org"]}, {"command": "open", "args": ["--tab", "google.com"]}]
 
+Correct navigate to a website (use open, not navigate):
+  Request: "navigate to wikipedia"
+  Response: [{"command": "open", "args": ["wikipedia.org"]}]
+
+Correct go to a website (use open):
+  Request: "go to wikipedia"
+  Response: [{"command": "open", "args": ["wikipedia.org"]}]
+
+Correct zoom with count:
+  Request: "zoom in 5 steps"
+  Response: [{"command": "zoom-in", "args": ["5"]}]
+
+Correct open three new tabs:
+  Request: "open 3 new tabs with the homepage"
+  Response: [{"command": "open", "args": ["--tab", "about:blank"]}, {"command": "open", "args": ["--tab", "about:blank"]}, {"command": "open", "args": ["--tab", "about:blank"]}]
+
 Correct add bookmark:
   Request: "add google to bookmarks"
   Response: [{"command": "bookmark-add", "args": ["google.com", "Google"]}]
@@ -197,7 +254,13 @@ WRONG - do not use tab-new or invent commands for opening tabs:
   [{"command": "tab-new", "args": ["google.com"]}]
 
 WRONG - do not omit --tab when the user asks for a new/separate/another tab:
-  [{"command": "open", "args": ["google.com"]}] (this opens in the current tab, not a new tab)\
+  [{"command": "open", "args": ["google.com"]}] (this opens in the current tab, not a new tab)
+
+WRONG - do not map "go to X" to non-open commands:
+  [{"command": "command-history-next", "args": []}] ("go to wikipedia" should use open, not command-history-next)
+
+WRONG - do not invent flag names for zoom:
+  [{"command": "zoom-in", "args": ["--flag", "50%"]}] (zoom-in has no --flag; use plain count value instead)\
 """
 
 # ---------------------------------------------------------------------------

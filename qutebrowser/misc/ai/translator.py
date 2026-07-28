@@ -35,9 +35,12 @@ def _build_cmd_meta(candidates: list[CandidateCommand]) -> dict[str, dict]:
     for c in candidates:
         flag_set: set[str] = set()
         positional_count = 0
+        has_count = False
         for arg in c.args:
             if arg.get('arg_type') == 'positional':
                 positional_count += 1
+                if arg.get('name') == 'count':
+                    has_count = True
             else:
                 if 'long_flag' in arg:
                     flag_set.add(arg['long_flag'])
@@ -46,6 +49,7 @@ def _build_cmd_meta(candidates: list[CandidateCommand]) -> dict[str, dict]:
         cmd_meta[c.name] = {
             'flags': flag_set,
             'positional_count': positional_count,
+            'has_count': has_count,
         }
     return cmd_meta
 
@@ -129,7 +133,21 @@ def _validate_command(
     if not filtered:
         return command
 
-    return f"{command} {' '.join(filtered)}"
+    count_prefix = ''
+    if meta.get('has_count') and filtered:
+        count_val = filtered[0]
+        try:
+            int(count_val)
+            count_prefix = f':{count_val} '
+            filtered = filtered[1:]
+        except (ValueError, TypeError):
+            pass
+
+    if not count_prefix and not filtered:
+        return command
+
+    suffix = f" {' '.join(filtered)}" if filtered else ''
+    return f"{count_prefix}{command}{suffix}"
 
 
 def translate_query(

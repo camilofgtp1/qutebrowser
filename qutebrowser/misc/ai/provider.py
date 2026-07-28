@@ -137,9 +137,7 @@ def _chat_completion(
         'temperature': 0,
     }
 
-    if not tools:
-        body['response_format'] = {'type': 'json_object'}
-    else:
+    if tools:
         body['tools'] = tools
         body['tool_choice'] = 'auto'
 
@@ -219,9 +217,32 @@ def _translate_with_tools(
     tool_calls = msg.get('tool_calls')
     if tool_calls:
         logger.info(
-            "[llm/tool] query=%r -> LLM called %d tool(s)",
+            "[llm/tool] query=%r -> LLM called %d tool(s): %s",
             query, len(tool_calls),
+            [tc['function']['name'] for tc in tool_calls],
         )
+        logger.debug(
+            "[llm/tool] query=%r -> full tool_calls: %s",
+            query, tool_calls,
+        )
+
+        assistant_msg = {
+            'role': 'assistant',
+            'content': msg.get('content') or None,
+            'tool_calls': [
+                {
+                    'id': tc['id'],
+                    'type': 'function',
+                    'function': {
+                        'name': tc['function']['name'],
+                        'arguments': tc['function']['arguments'],
+                    },
+                }
+                for tc in tool_calls
+            ],
+        }
+        messages.append(assistant_msg)
+
         for tc in tool_calls:
             try:
                 args = json.loads(tc['function']['arguments'])
@@ -256,8 +277,10 @@ def _translate_with_tools(
 
         t1 = time.monotonic()
         logger.info(
-            "[perf] tool round-trip: %.1fs, making second call",
-            t1 - t0,
+            "[perf] tool round-trip: %.1fs, making second call "
+            "(messages=%d, roles=%s)",
+            t1 - t0, len(messages),
+            [m['role'] for m in messages],
         )
         msg = _chat_completion(messages, tools=[_LOOKUP_TOOL])
         llm_elapsed = time.monotonic() - t1

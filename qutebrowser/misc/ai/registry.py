@@ -38,6 +38,14 @@ def get_corpus() -> list[CandidateCommand]:
             }
             _enrich_arg(cmd, param_name, arg_info)
             arg_list.append(arg_info)
+        if cmd.takes_count():
+            arg_list.append({
+                'name': 'count',
+                'display': 'count',
+                'required': False,
+                'arg_type': 'positional',
+                'desc': 'Number of times to repeat (e.g. :5 zoom-in = 5 steps)',
+            })
 
         entry = CandidateCommand(
             name=name,
