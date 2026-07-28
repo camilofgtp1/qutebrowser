@@ -280,6 +280,28 @@ See also [`RFC.md`](RFC.md) for the full design history, challenges, and rationa
 - **Config kept to environment variables only.** Not wired into qutebrowser's `configdata.yml` — reduces surface area for an experimental feature.
 - **sentence-transformers for embeddings.** Provides high-quality semantic matching with the `all-MiniLM-L6-v2` model (~500 MB at inference). Tradeoff: it depends on PyTorch, which adds ~500 MB (CPU-only wheel) to the install — or ~3.5 GB if CUDA libraries are pulled in. A lighter embedding backend (e.g. ONNX, pure-numpy) would avoid this but would either sacrifice accuracy or require more complex model conversion/quantization tooling.
 
+### Corpus description quality
+
+The retrieval corpus is built from the command registry's docstrings — specifically the first line of each command's docstring (used as `desc`) and its argument descriptions. These are concise but often omit important nuances, causing the LLM to misinterpret intent:
+
+| Query | What the LLM sees (desc only) | What it actually needs | Why it fails |
+|---|---|---|---|
+| `increase the font size 50%` | `zoom-in`: "Increase the zoom level for the current tab." | `zoom-in` increments by ~10% per step; 50% needs `:5 zoom-in`. The `count` is a prefix (`:N cmd`), not a regular positional arg — expressed via count prefix syntax. The description says nothing about step size. | The LLM invents `--flag 50%` because it can't infer the count mechanism from the short description. |
+| `go to wikipedia` | `command-history-next`: "Go forward in the commandline history." | "go to X" should map to `open`, but `command-history-next` shares the word "go" and ranks high in retrieval. The desc "Go forward in..." reinforces the wrong match. | Semantic retrieval surfaces a command with similar wording but completely different semantics. |
+| `navigate to wikipedia` | `navigate`: "Open typical prev/next links or navigate using the URL path." | `navigate` only accepts directional values (`prev`, `next`, etc.), not URLs. The query should resolve to `open`. But the word "navigate" in both the query and command name overrides the semantic nuance. | The command name itself misleads the LLM — it matches the verb in the query but isn't what the user wants. |
+| `open 3 new tabs` | `open`: "Open a URL in the current/[count]th tab." | There's no `--count` flag on `open`. Opening multiple tabs requires repeating `open --tab` for each. The `[count]` in the description refers to the Nth tab index, not a repeat count. | The description is ambiguous between "open tab number N" vs "open N tabs". |
+
+The root cause: docstrings are written for human users who already understand qutebrowser's command model (count prefix, tab semantics, URL completion conventions). The LLM lacks this implicit knowledge and has to infer it from a single-line summary and argument names.
+
+Mitigations built into the prompt:
+- Explicit "navigate to X = open X, NOT navigate" rule (avoids the navigate/open confusion)
+- WRONG examples showing `command-history-next` is not `go to X`
+- `count` exposed as a positional arg in the registry metadata so the LLM sees it
+- Prompt example for `zoom-in` with count value
+- Validation that strips hallucinated flags like `--flag`
+
+A more thorough fix would require richer per-command metadata, e.g. multi-sentence descriptions, usage examples embedded in the corpus, or a separate lookup table of common query patterns.
+
 ---
 
 ## What I'd do next with more time
